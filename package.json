@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "joi": "^17.7.1",
-    "mongodb": "^5.0.1"
+    "mongodb": "^5.0.1",
+    "redis": "^4.6.4"
   }
 }

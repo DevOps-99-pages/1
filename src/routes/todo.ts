@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, Router } from "express";
 
 import client from "../util/db";
+import cacheClient from "../util/cache";
 import newTodoValidator from "../validate/newTodo";
 import { generateRandomString } from "../util/random";
 
@@ -18,8 +19,15 @@ router.get("/", async (_, res) => {
 });
 
 router.get("/:id", async (req, res) => {
+  const cachedResult = await cacheClient.get(req.params.id);
+  if (cachedResult) {
+    res.send(JSON.parse(cachedResult));
+    return;
+  }
+
   const db = client.db("todo");
   const collection = db.collection("todo");
+
   const response = await collection.findOne({
     id: req.params.id,
   });
@@ -30,6 +38,12 @@ router.get("/:id", async (req, res) => {
   }
 
   const { title, creator, body } = response;
+
+  await cacheClient.set(
+    req.params.id,
+    JSON.stringify({ title, creator, body }),
+    { EX: 60 * 60 }
+  );
 
   res.send({ title, creator, body });
 });
